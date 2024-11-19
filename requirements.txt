@@ -3,8 +3,9 @@ SpeechRecognition
 openai-whisper
 torch
 numpy
-openai
+openai>=1.0.0
 click
 python-dotenv
 pyaudio
-aiofiles 
+aiofiles
+ffmpeg-python 

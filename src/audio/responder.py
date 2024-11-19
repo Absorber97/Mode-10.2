@@ -47,13 +47,26 @@ class AudioHandler:
     def __post_init__(self):
         self.temp_dir.mkdir(parents=True, exist_ok=True)
         self.client = OpenAI()
+        # Initialize audio playback
+        try:
+            self.AudioSegment = AudioSegment
+            self.play = play
+        except Exception as e:
+            print(f"Error initializing audio playback: {e}")
+            raise
 
     def speak(self, text: str) -> None:
         """Convert text to speech and play it"""
+        print(f"Converting to speech: {text}")
         audio_file = self.temp_dir / f"reply_{hash(text)}.mp3"
         try:
             self._generate_audio(text, audio_file)
+            print("Audio generated, playing...")
             self._play_audio(audio_file)
+            print("Audio playback complete")
+        except Exception as e:
+            print(f"Error in speak: {e}")
+            raise
         finally:
             audio_file.unlink(missing_ok=True)
 
@@ -68,18 +81,25 @@ class AudioHandler:
             
             # Save the audio to a file
             response.stream_to_file(str(file_path))
+            if not file_path.exists():
+                raise FileNotFoundError(f"Audio file was not created: {file_path}")
             
         except Exception as e:
-            logging.error(f"Error generating audio: {e}")
+            print(f"Error generating audio: {e}")
             raise
 
     def _play_audio(self, file_path: Path) -> None:
         """Play audio file"""
         try:
-            audio = AudioSegment.from_mp3(file_path)
-            play(audio)
+            if not file_path.exists():
+                raise FileNotFoundError(f"Audio file not found: {file_path}")
+            
+            print(f"Loading audio file: {file_path}")
+            audio = self.AudioSegment.from_mp3(str(file_path))
+            print("Playing audio...")
+            self.play(audio)
         except Exception as e:
-            logging.error(f"Error playing audio: {e}")
+            print(f"Error playing audio: {e}")
             raise
 
 @dataclass

@@ -5,11 +5,12 @@ from queue import Queue
 from .config import Config
 from .audio.recorder import AudioRecorder
 from .audio.transcriber import Transcriber
-from .audio.responder import Responder
+from .audio.responder import Responder, AudioHandler
 import os
 from pathlib import Path
 from openai import OpenAI
 from io import BytesIO
+import speech_recognition as sr
 
 @click.command()
 @click.option("--model", default="base", help="Model to use", 
@@ -33,6 +34,17 @@ from io import BytesIO
               type=click.Choice(["tts-1", "tts-1-hd"]),
               help="OpenAI TTS model to use")
 def main(**kwargs):
+    # Check available microphones
+    print("Checking microphone availability...")
+    try:
+        mics = sr.Microphone.list_microphone_names()
+        if not mics:
+            raise ValueError("No microphones found!")
+        print(f"Available microphones: {mics}")
+    except Exception as e:
+        print(f"Error checking microphones: {e}")
+        raise
+
     # Load configuration
     config = Config.load_from_env(**kwargs)
     
